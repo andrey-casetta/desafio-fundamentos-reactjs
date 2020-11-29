@@ -8,6 +8,14 @@ export const Container = styled.div<ContainerProps>`
   background: #5636d3;
   padding: 30px 0;
 
+  .visible {
+    opacity: 1;
+  }
+
+  .invisible {
+    opacity: 0;
+  }
+
   header {
     width: 1120px;
     margin: 0 auto;
@@ -25,6 +33,14 @@ export const Container = styled.div<ContainerProps>`
 
         & + a {
           margin-left: 32px;
+        }
+
+        img {
+          position: absolute;
+          width: 71px;
+          height: 2px;
+          top: 69px;
+          margin-left: -72px;
         }
 
         &:hover {

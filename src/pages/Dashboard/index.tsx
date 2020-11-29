@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import income from '../../assets/income.svg';
 import outcome from '../../assets/outcome.svg';
 import total from '../../assets/total.svg';
+import Venda from '../../assets/Venda.svg';
+import Casa from '../../assets/Casa.svg';
+import Alimentacao from '../../assets/Alimentacao.svg';
 
 import api from '../../services/api';
 
@@ -11,6 +14,7 @@ import Header from '../../components/Header';
 import formatValue from '../../utils/formatValue';
 
 import { Container, CardContainer, Card, TableContainer } from './styles';
+import { ImportFileContainer, Title } from '../Import/styles';
 
 interface Transaction {
   id: string;
@@ -30,12 +34,45 @@ interface Balance {
 }
 
 const Dashboard: React.FC = () => {
-  // const [transactions, setTransactions] = useState<Transaction[]>([]);
-  // const [balance, setBalance] = useState<Balance>({} as Balance);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [balance, setBalance] = useState<Balance>({} as Balance);
+
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  function convertValue(value: string) {
+    if (value === undefined) {
+      return `R$ 00,00`;
+    }
+
+    const toNumber = parseFloat(value);
+    const thousand = toNumber / 1000;
+    const sThousand = thousand.toString().split('.')[0];
+    let cent = (toNumber % 1000).toString();
+
+    if (cent == '0') {
+      cent = '000';
+    }
+    if (thousand < 1) {
+      return `R$ ${cent},00`;
+    }
+
+    return `R$ ${sThousand}.${cent},00`;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  function convertData(value: Date) {
+    const convertedData = value.toString();
+    const day = convertedData.substring(8, 10);
+    const month = convertedData.substring(5, 7);
+    const year = convertedData.substring(0, 4);
+    return `${day}/${month}/${year}`;
+  }
 
   useEffect(() => {
     async function loadTransactions(): Promise<void> {
-      // TODO
+      api.get('/transactions').then(response => {
+        setTransactions(response.data.transactions);
+        setBalance(response.data.balance);
+      });
     }
 
     loadTransactions();
@@ -51,51 +88,73 @@ const Dashboard: React.FC = () => {
               <p>Entradas</p>
               <img src={income} alt="Income" />
             </header>
-            <h1 data-testid="balance-income">R$ 5.000,00</h1>
+            <h1 data-testid="balance-income">{convertValue(balance.income)}</h1>
           </Card>
           <Card>
             <header>
               <p>Saídas</p>
               <img src={outcome} alt="Outcome" />
             </header>
-            <h1 data-testid="balance-outcome">R$ 1.000,00</h1>
+            <h1 data-testid="balance-outcome">
+              {convertValue(balance.outcome)}
+            </h1>
           </Card>
           <Card total>
             <header>
               <p>Total</p>
               <img src={total} alt="Total" />
             </header>
-            <h1 data-testid="balance-total">R$ 4000,00</h1>
+            <h1 data-testid="balance-total">{convertValue(balance.total)}</h1>
           </Card>
         </CardContainer>
 
-        <TableContainer>
-          <table>
-            <thead>
-              <tr>
-                <th>Título</th>
-                <th>Preço</th>
-                <th>Categoria</th>
-                <th>Data</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr>
-                <td className="title">Computer</td>
-                <td className="income">R$ 5.000,00</td>
-                <td>Sell</td>
-                <td>20/04/2020</td>
-              </tr>
-              <tr>
-                <td className="title">Website Hosting</td>
-                <td className="outcome">- R$ 1.000,00</td>
-                <td>Hosting</td>
-                <td>19/04/2020</td>
-              </tr>
-            </tbody>
-          </table>
-        </TableContainer>
+        {transactions.length > 0 ? (
+          <TableContainer>
+            <table>
+              <thead>
+                <tr>
+                  <th>Título</th>
+                  <th>Preço</th>
+                  <th>Categoria</th>
+                  <th>Data</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map(transaction => (
+                  <tr key={transaction.id}>
+                    <td className="title">{transaction.title}</td>
+                    <td className={transaction.type}>
+                      {transaction.type === 'outcome' ? `- ` : ''}
+                      {convertValue(transaction.value.toString())}
+                    </td>
+                    <td>
+                      {' '}
+                      <img
+                        src={
+                          // eslint-disable-next-line no-nested-ternary
+                          transaction.category.title === 'Venda'
+                            ? Venda
+                            : transaction.category.title === 'Casa'
+                            ? Casa
+                            : Alimentacao
+                        }
+                        alt="typeIcon"
+                      />
+                      {transaction.category.title}
+                    </td>
+                    <td>{convertData(transaction.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TableContainer>
+        ) : (
+          <Container>
+            <ImportFileContainer>
+              <Title>Nenhum registro de transações encontrado!</Title>
+            </ImportFileContainer>
+          </Container>
+        )}
       </Container>
     </>
   );

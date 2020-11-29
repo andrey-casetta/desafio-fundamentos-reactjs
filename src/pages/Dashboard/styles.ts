@@ -4,6 +4,10 @@ interface CardProps {
   total?: boolean;
 }
 
+interface TDProps {
+  type: 'income' | 'outcome';
+}
+
 export const Container = styled.div`
   width: 100%;
   max-width: 1120px;
@@ -70,6 +74,12 @@ export const TableContainer = styled.section`
       font-size: 16px;
       font-weight: normal;
       color: #969cb3;
+
+      img {
+        width: 20px;
+        height: 20px;
+        margin: 0px 20px -3px -5px;
+      }
 
       &.title {
         color: #363f5f;
